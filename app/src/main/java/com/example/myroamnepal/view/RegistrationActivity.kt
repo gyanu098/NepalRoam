@@ -14,10 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,19 +34,20 @@ import com.example.myroamnepal.R
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
 
-class LoginActivity : ComponentActivity() {
+class RegistrationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                LoginScreen(
-                    onLoginSuccess = {
+                RegistrationScreen(
+                    onRegisterSuccess = {
                         startActivity(Intent(this, DashboardActivity::class.java))
                         finish()
                     },
-                    onSignUpClick = {
-                        startActivity(Intent(this, RegistrationActivity::class.java))
+                    onBackToLogin = {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
                     }
                 )
             }
@@ -58,10 +56,14 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
+fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit) {
+    var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    
     val scrollState = rememberScrollState()
 
     Column(
@@ -77,10 +79,10 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Circular Logo Structure
+        // Circular Logo Structure (Consistent with Login)
         Box(
             modifier = Modifier
-                .size(120.dp)
+                .size(100.dp)
                 .background(BluePrimary.copy(alpha = 0.1f), CircleShape)
                 .padding(8.dp),
             contentAlignment = Alignment.Center
@@ -95,32 +97,42 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "RoamNepal",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = BluePrimary,
-            letterSpacing = (-1).sp
-        )
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Text(
-            text = "Welcome Back",
-            fontSize = 26.sp,
+            text = "Create Account",
+            fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2D3E50)
         )
         Text(
-            text = "Sign in to continue your exploration",
+            text = "Join RoamNepal and start exploring",
             fontSize = 15.sp,
             color = Color.Gray
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // Full Name Field
+        OutlinedTextField(
+            value = fullName,
+            onValueChange = { fullName = it },
+            label = { Text("Full Name") },
+            placeholder = { Text("John Doe") },
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = BluePrimary) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BluePrimary,
+                focusedLabelColor = BluePrimary,
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Email Field
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -140,6 +152,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Password Field
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -166,23 +179,40 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
             )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(
-            onClick = { /* Handle forgot password */ },
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Text(
-                "Forgot Password?",
-                color = BluePrimary,
-                fontWeight = FontWeight.SemiBold
+        // Confirm Password Field
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text("Confirm Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BluePrimary) },
+            trailingIcon = {
+                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                    Icon(
+                        imageVector = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
+                        tint = if (confirmPasswordVisible) BluePrimary else Color.Gray
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BluePrimary,
+                focusedLabelColor = BluePrimary,
+                unfocusedBorderColor = Color(0xFFE0E0E0)
             )
-        }
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // Register Button
         Button(
-            onClick = onLoginSuccess,
+            onClick = onRegisterSuccess,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -191,7 +221,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
             Text(
-                "Login",
+                "Sign Up",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -200,16 +230,17 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Already have an account?
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Don't have an account? ", color = Color.Gray)
+            Text("Already have an account? ", color = Color.Gray)
             TextButton(
-                onClick = onSignUpClick,
+                onClick = onBackToLogin,
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Text(
-                    "Sign Up",
+                    "Login",
                     color = BluePrimary,
                     fontWeight = FontWeight.Bold
                 )
@@ -222,8 +253,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
 
 @Preview(showBackground = true)
 @Composable
-fun LoginPreview() {
+fun RegistrationPreview() {
     MyRoamNepalTheme {
-        LoginScreen(onLoginSuccess = {}, onSignUpClick = {})
+        RegistrationScreen(onRegisterSuccess = {}, onBackToLogin = {})
     }
 }
