@@ -14,7 +14,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,7 +50,6 @@ class RegistrationActivity : ComponentActivity() {
                         finish()
                     },
                     onBackToLogin = {
-                        startActivity(Intent(this, LoginActivity::class.java))
                         finish()
                     }
                 )
@@ -79,7 +82,7 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Circular Logo Structure (Consistent with Login)
+        // Circular Logo Structure
         Box(
             modifier = Modifier
                 .size(100.dp)
@@ -97,7 +100,7 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = "Create Account",
@@ -113,7 +116,7 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Full Name Field
+
         OutlinedTextField(
             value = fullName,
             onValueChange = { fullName = it },
@@ -132,7 +135,7 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Email Field
+
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -152,7 +155,7 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Password Field
+
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -181,7 +184,7 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Confirm Password Field
+
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
@@ -210,7 +213,7 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Register Button
+
         Button(
             onClick = onRegisterSuccess,
             modifier = Modifier
@@ -230,7 +233,7 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Already have an account?
+
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {

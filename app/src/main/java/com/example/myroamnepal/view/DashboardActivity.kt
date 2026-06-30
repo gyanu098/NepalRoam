@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -82,7 +83,9 @@ fun DashboardScreen() {
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(destinations) { destination ->
-                    DestinationCard(destination)
+                    DestinationCard(destination) {
+                        context.startActivity(Intent(context, PlaceDetailActivity::class.java))
+                    }
                 }
             }
         }
@@ -199,11 +202,13 @@ fun CategoryChip(text: String, isSelected: Boolean = false) {
 }
 
 @Composable
-fun DestinationCard(destination: Destination) {
+fun DestinationCard(destination: Destination, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Column {
             Box(modifier = Modifier.height(120.dp).fillMaxWidth()) {
