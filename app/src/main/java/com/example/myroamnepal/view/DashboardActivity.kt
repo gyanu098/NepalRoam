@@ -256,17 +256,19 @@ fun BottomNavigation() {
             onClick = { }
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.DateRange, contentDescription = "Bookings") },
-            label = { Text("Bookings") },
+            icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
+            label = { Text("Favorites") },
             selected = false,
-            onClick = { }
+            onClick = { 
+                context.startActivity(Intent(context, FavoritesActivity::class.java))
+            }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
             label = { Text("Profile") },
             selected = false,
             onClick = {
-                context.startActivity(Intent(context, ProfileActivity::class.java))
+                context.startActivity(Intent(context, MyProfileActivity::class.java))
             }
         )
     }

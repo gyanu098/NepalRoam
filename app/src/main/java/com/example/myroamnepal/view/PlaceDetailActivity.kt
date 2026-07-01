@@ -10,20 +10,26 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +60,8 @@ val LightGrayBg = Color(0xFFF8F9FA)
 @Composable
 fun PlaceDetailScreen() {
     val context = LocalContext.current
+    var isFavorite by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             Surface(shadowElevation = 4.dp) {
@@ -97,7 +105,7 @@ fun PlaceDetailScreen() {
         bottomBar = {
             NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = null, tint = BluePrimary) },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     selected = false,
                     label = { Text("Home") },
                     onClick = {
@@ -108,17 +116,19 @@ fun PlaceDetailScreen() {
                 )
 
                 NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = null) },
+                    icon = { Icon(Icons.Outlined.FavoriteBorder, contentDescription = "Favorites") },
                     selected = false,
-                    label = { Text("Explore") },
-                    onClick = {}
+                    label = { Text("Favorites") },
+                    onClick = {
+                        context.startActivity(Intent(context, FavoritesActivity::class.java))
+                    }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Person, contentDescription = null) },
+                    icon = { Icon(Icons.Outlined.Person, contentDescription = "Profile") },
                     selected = false,
                     label = { Text("Profile") },
                     onClick = {
-                        context.startActivity(Intent(context, ProfileActivity::class.java))
+                        context.startActivity(Intent(context, MyProfileActivity::class.java))
                     }
                 )
             }
@@ -132,14 +142,29 @@ fun PlaceDetailScreen() {
                 .background(LightGrayBg)
         ) {
 
-            Image(
-                painter = painterResource(id = R.drawable.three), 
-                contentDescription = "Phewa Lake",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(260.dp),
-                contentScale = ContentScale.Crop
-            )
+            Box(modifier = Modifier.fillMaxWidth().height(260.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.three), 
+                    contentDescription = "Phewa Lake",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                
+                // Heart (Favorite) Button
+                IconButton(
+                    onClick = { isFavorite = !isFavorite },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .background(Color.White.copy(alpha = 0.7f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) Color.Red else Color.Gray
+                    )
+                }
+            }
 
             Column(modifier = Modifier.padding(16.dp)) {
 
