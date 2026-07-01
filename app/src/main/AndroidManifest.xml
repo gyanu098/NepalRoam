@@ -59,6 +59,16 @@
             android:label="Profile"
             android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
+            android:name=".view.NotificationActivity"
+            android:exported="true"
+            android:label="Notifications"
+            android:theme="@style/Theme.MyRoamNepal"></activity>
+        <activity
+            android:name=".view.EditProfileActivity"
+            android:exported="true"
+            android:label="Edit Profile"
+            android:theme="@style/Theme.MyRoamNepal"></activity>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"

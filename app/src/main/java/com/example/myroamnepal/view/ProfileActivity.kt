@@ -128,7 +128,9 @@ fun ProfileScreen(onBack: () -> Unit) {
             
             // Edit Profile Button
             Button(
-                onClick = { /* Handle edit profile */ },
+                onClick = { 
+                    context.startActivity(Intent(context, EditProfileActivity::class.java))
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
                 shape = RoundedCornerShape(12.dp),

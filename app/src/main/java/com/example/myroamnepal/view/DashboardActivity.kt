@@ -120,7 +120,9 @@ fun TopBar() {
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { }) {
+            IconButton(onClick = { 
+                context.startActivity(Intent(context, NotificationActivity::class.java))
+            }) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Notifications",
