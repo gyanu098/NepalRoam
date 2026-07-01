@@ -49,6 +49,16 @@
             android:label="Place Details"
             android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
+            android:name=".view.ReviewActivity"
+            android:exported="true"
+            android:label="Reviews"
+            android:theme="@style/Theme.MyRoamNepal"></activity>
+        <activity
+            android:name=".view.ProfileActivity"
+            android:exported="true"
+            android:label="Profile"
+            android:theme="@style/Theme.MyRoamNepal"></activity>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"

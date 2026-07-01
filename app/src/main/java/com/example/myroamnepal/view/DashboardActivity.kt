@@ -94,6 +94,7 @@ fun DashboardScreen() {
 
 @Composable
 fun TopBar() {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -132,6 +133,9 @@ fun TopBar() {
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(Color.LightGray)
+                    .clickable {
+                        context.startActivity(Intent(context, ProfileActivity::class.java))
+                    }
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
@@ -238,6 +242,7 @@ fun DestinationCard(destination: Destination, onClick: () -> Unit) {
 
 @Composable
 fun BottomNavigation() {
+    val context = LocalContext.current
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 8.dp
@@ -246,12 +251,6 @@ fun BottomNavigation() {
             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             label = { Text("Home") },
             selected = true,
-            onClick = { }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Guides") },
-            label = { Text("Guides") },
-            selected = false,
             onClick = { }
         )
         NavigationBarItem(
@@ -264,7 +263,9 @@ fun BottomNavigation() {
             icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
             label = { Text("Profile") },
             selected = false,
-            onClick = { }
+            onClick = {
+                context.startActivity(Intent(context, ProfileActivity::class.java))
+            }
         )
     }
 }

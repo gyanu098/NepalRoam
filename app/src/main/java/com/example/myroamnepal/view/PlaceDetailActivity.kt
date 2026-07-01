@@ -1,15 +1,15 @@
 package com.example.myroamnepal.view
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -17,20 +17,17 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,6 +53,7 @@ val LightGrayBg = Color(0xFFF8F9FA)
 
 @Composable
 fun PlaceDetailScreen() {
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             Surface(shadowElevation = 4.dp) {
@@ -72,7 +70,11 @@ fun PlaceDetailScreen() {
                             .background(BluePrimary)
                             .padding(horizontal = 16.dp, vertical = 12.dp)
                     ) {
-                        IconButton(onClick = { /* handle back navigation */ }) {
+                        IconButton(onClick = { 
+                            if (context is ComponentActivity) {
+                                context.finish()
+                            }
+                        }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
@@ -88,8 +90,6 @@ fun PlaceDetailScreen() {
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
-
-
                     }
                 }
             }
@@ -98,23 +98,28 @@ fun PlaceDetailScreen() {
             NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = null, tint = BluePrimary) },
-                    selected = true,
-                    onClick = {}
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.LocationOn, contentDescription = null) },
                     selected = false,
-                    onClick = {}
+                    label = { Text("Home") },
+                    onClick = {
+                        val intent = Intent(context, DashboardActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        context.startActivity(intent)
+                    }
                 )
+
                 NavigationBarItem(
                     icon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = null) },
                     selected = false,
+                    label = { Text("Explore") },
                     onClick = {}
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Outlined.Person, contentDescription = null) },
                     selected = false,
-                    onClick = {}
+                    label = { Text("Profile") },
+                    onClick = {
+                        context.startActivity(Intent(context, ProfileActivity::class.java))
+                    }
                 )
             }
         }
@@ -202,12 +207,6 @@ fun PlaceDetailScreen() {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                DetailSectionHeader(icon = Icons.Default.Person, title = "Local Guides")
-                Spacer(modifier = Modifier.height(12.dp))
-                GuideCard()
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 // Travel Tips Section
                 DetailSectionHeader(icon = Icons.Default.Info, title = "Travel Tips")
                 Spacer(modifier = Modifier.height(8.dp))
@@ -218,9 +217,30 @@ fun PlaceDetailScreen() {
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                DetailSectionHeader(icon = Icons.Default.Star, title = "Reviews")
-                Spacer(modifier = Modifier.height(12.dp))
-                ReviewSummary()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.clickable {
+                        context.startActivity(Intent(context, ReviewActivity::class.java))
+                    }) {
+                        DetailSectionHeader(icon = Icons.Default.Star, title = "Reviews")
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ReviewSummary()
+                    }
+                    Button(
+                        onClick = {
+                            context.startActivity(Intent(context, ReviewActivity::class.java))
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text("Add Review", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 ReviewCard(
                     comment = "Amazing place! Had a great time.",
@@ -246,45 +266,6 @@ fun DetailSectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, t
         Icon(icon, contentDescription = null, tint = BluePrimary, modifier = Modifier.size(22.dp))
         Spacer(modifier = Modifier.width(10.dp))
         Text(text = title, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = DarkBlueText)
-    }
-}
-
-@Composable
-fun GuideCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(3.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background), 
-                contentDescription = "Guide",
-                modifier = Modifier
-                    .size(65.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, BluePrimary.copy(alpha = 0.2f), CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Karma Sherpa", fontWeight = FontWeight.Bold, color = DarkBlueText, fontSize = 16.sp)
-                Text(text = "Expert Guide", fontStyle = FontStyle.Italic, color = BluePrimary, fontSize = 13.sp)
-                Text(text = "Everest & Annapurna Treks", color = Color.Gray, fontSize = 12.sp)
-            }
-            Button(
-                onClick = {},
-                colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
-                shape = RoundedCornerShape(10.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                Text("Book Guide", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            }
-        }
     }
 }
 
