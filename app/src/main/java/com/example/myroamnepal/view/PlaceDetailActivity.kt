@@ -14,14 +14,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
@@ -77,14 +74,14 @@ fun PlaceDetailScreen() {
                     ) {
                         IconButton(onClick = { /* handle back navigation */ }) {
                             Icon(
-                                imageVector = Icons.Default.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.White,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(80.dp))
-//
+
                         Text(
                             text = "RoamNepal",
                             color = Color.White,
@@ -194,7 +191,7 @@ fun PlaceDetailScreen() {
                 Spacer(modifier = Modifier.height(28.dp))
 
                 // Best Season Section
-                DetailSectionHeader(icon = Icons.Default.CalendarMonth, title = "Best Season to Visit")
+                DetailSectionHeader(icon = Icons.Outlined.CalendarMonth, title = "Best Season to Visit")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "September to November and March to May for best weather.",
