@@ -12,71 +12,47 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyRoamNepal">
         <activity
+            android:name=".view.SplashScreen"
+            android:exported="true"
+            android:label="@string/title_activity_splash_screen"
+            android:theme="@style/Theme.MyRoamNepal">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".view.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
-            android:theme="@style/Theme.MyRoamNepal">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
             android:name=".view.RegistrationActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="Registration"
-            android:theme="@style/Theme.MyRoamNepal">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
+            android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
             android:name=".view.DashboardActivity"
             android:exported="true"
             android:label="@string/title_activity_dashboard"
-            android:theme="@style/Theme.MyRoamNepal">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
+            android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
             android:name=".view.AddPlaceActivity"
             android:exported="true"
             android:label="Add Place"
-            android:theme="@style/Theme.MyRoamNepal">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
+            android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
             android:name=".view.PlaceDetailActivity"
             android:exported="true"
             android:label="Place Details"
-            android:theme="@style/Theme.MyRoamNepal">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
+            android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.MyRoamNepal">
-
-        </activity>
+            android:theme="@style/Theme.MyRoamNepal"></activity>
     </application>
 
 </manifest>

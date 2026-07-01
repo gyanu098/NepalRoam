@@ -13,7 +13,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
@@ -60,26 +64,35 @@ fun PlaceDetailScreen() {
             Surface(shadowElevation = 4.dp) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .background(BluePrimary)
                         .statusBarsPadding()
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Terrain,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(BluePrimary)
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        IconButton(onClick = { /* handle back navigation */ }) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(80.dp))
+//
                         Text(
                             text = "RoamNepal",
                             color = Color.White,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
+
+
                     }
                 }
             }
@@ -180,13 +193,33 @@ fun PlaceDetailScreen() {
 
                 Spacer(modifier = Modifier.height(28.dp))
 
+                // Best Season Section
+                DetailSectionHeader(icon = Icons.Default.CalendarMonth, title = "Best Season to Visit")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "September to November and March to May for best weather.",
+                    fontSize = 15.sp,
+                    color = DarkBlueText,
+                    modifier = Modifier.padding(start = 32.dp)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
 
                 DetailSectionHeader(icon = Icons.Default.Person, title = "Local Guides")
                 Spacer(modifier = Modifier.height(12.dp))
                 GuideCard()
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
+                // Travel Tips Section
+                DetailSectionHeader(icon = Icons.Default.Info, title = "Travel Tips")
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(modifier = Modifier.padding(start = 32.dp)) {
+                    Text("• Bring a camera for the mountain views.", fontSize = 14.sp, color = Color.Gray)
+                    Text("• Boat during sunset for the best lighting.", fontSize = 14.sp, color = Color.Gray)
+                }
+
+                Spacer(modifier = Modifier.height(28.dp))
 
                 DetailSectionHeader(icon = Icons.Default.Star, title = "Reviews")
                 Spacer(modifier = Modifier.height(12.dp))
