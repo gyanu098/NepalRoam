@@ -2,6 +2,7 @@ package com.example.myroamnepal.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -46,8 +47,9 @@ class RegistrationActivity : ComponentActivity() {
             MyRoamNepalTheme {
                 RegistrationScreen(
                     onRegisterSuccess = {
-                        startActivity(Intent(this, DashboardActivity::class.java))
-                        finish()
+                        // Work flow: Registration -> Login
+                        Toast.makeText(this, "Registration Successful! Please Login.", Toast.LENGTH_SHORT).show()
+                        finish() // Returns to LoginActivity
                     },
                     onBackToLogin = {
                         finish()

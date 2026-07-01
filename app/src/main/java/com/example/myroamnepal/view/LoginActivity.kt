@@ -33,17 +33,22 @@ class LoginActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                LoginScreen(onLoginSuccess = {
-                    startActivity(Intent(this, DashboardActivity::class.java))
-                    finish()
-                })
+                LoginScreen(
+                    onLoginSuccess = {
+                        startActivity(Intent(this, DashboardActivity::class.java))
+                        finish()
+                    },
+                    onSignUpClick = {
+                        startActivity(Intent(this, RegistrationActivity::class.java))
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit) {
+fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -138,7 +143,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
         Row {
             Text("Don't have an account? ", color = Color.Gray)
             TextButton(
-                onClick = { },
+                onClick = onSignUpClick,
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Text("Sign Up", color = BluePrimary, fontWeight = FontWeight.Bold)
@@ -151,6 +156,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 @Composable
 fun LoginPreview() {
     MyRoamNepalTheme {
-        LoginScreen(onLoginSuccess = {})
+        LoginScreen(onLoginSuccess = {}, onSignUpClick = {})
     }
 }

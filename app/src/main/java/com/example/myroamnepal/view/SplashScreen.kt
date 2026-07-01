@@ -9,8 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,7 +33,8 @@ class SplashScreen : ComponentActivity() {
         setContent {
             MyRoamNepalTheme {
                 SplashContent(onGetStartedClick = {
-                    startActivity(Intent(this, RegistrationActivity::class.java))
+                    // Work flow: Splash -> Login
+                    startActivity(Intent(this, LoginActivity::class.java))
                     finish()
                 })
             }
@@ -82,15 +81,6 @@ fun SplashContent(onGetStartedClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(top = 300.dp)
             ) {
-
-
-//                Icon(
-//                    imageVector = Icons.Default.Terrain,
-//                    contentDescription = null,
-//                    tint = Color.White,
-//                    modifier = Modifier.size(40.dp)
-//                )
-//                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "RoamNepal",
                     color = Color.White,
