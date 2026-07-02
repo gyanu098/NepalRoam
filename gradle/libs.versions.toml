@@ -10,6 +10,11 @@ kotlin = "2.2.10"
 composeBom = "2024.09.00"
 material3Lint = "1.4.0"
 coil = "2.7.0"
+googleGmsGoogleServices = "4.5.0"
+firebaseDatabase = "22.0.1"
+firebaseFirestore = "26.4.0"
+firebaseAuth = "23.2.0"
+cloudinary = "3.1.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -29,7 +34,12 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-compose-material3-lint = { group = "androidx.compose.material3", name = "material3-lint", version.ref = "material3Lint" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+cloudinary-android = { group = "com.cloudinary", name = "cloudinary-android", version.ref = "cloudinary" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }

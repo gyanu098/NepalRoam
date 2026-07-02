@@ -27,12 +27,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.myroamnepal.R
+import com.example.myroamnepal.model.PlaceModel
+import com.example.myroamnepal.repo.PlaceRepoImpl
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.PlaceViewModel
+import com.example.myroamnepal.viewModel.PlaceViewModelFactory
+import com.example.myroamnepal.viewModel.UserViewModel
 
 class MyProfileActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,30 +46,36 @@ class MyProfileActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                MyProfileScreen()
+                val context = LocalContext.current
+                val userViewModel: UserViewModel = viewModel()
+                val placeViewModel: PlaceViewModel = viewModel(
+                    factory = PlaceViewModelFactory(PlaceRepoImpl(context))
+                )
+                MyProfileScreen(userViewModel = userViewModel, placeViewModel = placeViewModel)
             }
         }
     }
 }
 
 @Composable
-fun MyProfileScreen() {
+fun MyProfileScreen(userViewModel: UserViewModel, placeViewModel: PlaceViewModel) {
     val context = LocalContext.current
+    val user by userViewModel.user.collectAsState()
+    val userPlaces by placeViewModel.userPlaces.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) } // 0 for Posts, 1 for Favourites
 
-    val userPosts = listOf(
-        Destination("Cave", R.drawable.placeone),
-        Destination("Hidden lake", R.drawable.placetwo),
-        Destination("Waterfall near kathmandu", R.drawable.three),
-        Destination("Beautiful temple", R.drawable.four),
-        Destination("Hidden lake", R.drawable.placetwo),
-        Destination("Cave", R.drawable.placeone)
-    )
+    LaunchedEffect(Unit) {
+        userViewModel.loadCurrentUser()
+    }
 
-    val favoritePlaces = listOf(
-        Destination("Hidden lake", R.drawable.placetwo),
-        Destination("Waterfall near kathmandu", R.drawable.three)
-    )
+    LaunchedEffect(user) {
+        user?.let {
+            placeViewModel.getPlacesByUser(it.uid)
+        }
+    }
+
+    // Mock favorites for now until Favorite feature is implemented
+    val favoritePlaces = emptyList<PlaceModel>()
 
     Scaffold(
         bottomBar = {
@@ -102,9 +114,27 @@ fun MyProfileScreen() {
                 .background(Color.White)
         ) {
             // User Name and Profile Info Section
-            ProfileHeaderSection(postsCount = userPosts.size, favCount = favoritePlaces.size)
+            ProfileHeaderSection(
+                userName = user?.fullName ?: "Guest",
+                postsCount = userPlaces.size,
+                favCount = favoritePlaces.size
+            )
 
-            // Side-by-side Options (Posts and Favourites)
+            // Edit Profile Button (Instagram Style)
+            Button(
+                onClick = { context.startActivity(Intent(context, EditProfileActivity::class.java)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEFEFEF), contentColor = Color.Black)
+            ) {
+                Text("Edit Profile", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Tabs for Posts and Favourites
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.White,
@@ -114,43 +144,56 @@ fun MyProfileScreen() {
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Posts", fontWeight = FontWeight.Bold) },
+                    text = { Text("Posts") },
                     icon = { Icon(Icons.Default.GridView, contentDescription = null) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Favourites", fontWeight = FontWeight.Bold) },
+                    text = { Text("Favourites") },
                     icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = null) }
                 )
             }
 
-            // Grid view for Posts or Favourites (3 posts in 1 row style)
-            val displayList = if (selectedTab == 0) userPosts else favoritePlaces
+            // Grid view for Posts or Favourites
+            val displayList = if (selectedTab == 0) userPlaces else favoritePlaces
             
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(1.dp),
-                horizontalArrangement = Arrangement.spacedBy(1.dp),
-                verticalArrangement = Arrangement.spacedBy(1.dp)
-            ) {
-                items(displayList) { destination ->
-                    Box(
-                        modifier = Modifier
-                            .aspectRatio(1f)
-                            .background(Color.LightGray)
-                    ) {
-                        Image(
-                            painter = painterResource(id = destination.imageRes),
-                            contentDescription = destination.name,
+            if (displayList.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        if (selectedTab == 0) "No posts yet" else "No favorites yet",
+                        color = Color.Gray
+                    )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(1.dp),
+                    horizontalArrangement = Arrangement.spacedBy(1.dp),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                ) {
+                    items(displayList) { place ->
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .clickable {
-                                    context.startActivity(Intent(context, PlaceDetailActivity::class.java))
-                                },
-                            contentScale = ContentScale.Crop
-                        )
+                                .aspectRatio(1f)
+                                .background(Color.LightGray)
+                        ) {
+                            AsyncImage(
+                                model = place.imageUrl,
+                                contentDescription = place.name,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clickable {
+                                        val intent = Intent(context, PlaceDetailActivity::class.java)
+                                        intent.putExtra("PLACE_ID", place.id)
+                                        context.startActivity(intent)
+                                    },
+                                contentScale = ContentScale.Crop,
+                                placeholder = painterResource(id = R.drawable.three),
+                                error = painterResource(id = R.drawable.three)
+                            )
+                        }
                     }
                 }
             }
@@ -159,28 +202,44 @@ fun MyProfileScreen() {
 }
 
 @Composable
-fun ProfileHeaderSection(postsCount: Int, favCount: Int) {
+fun ProfileHeaderSection(userName: String, postsCount: Int, favCount: Int) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 40.dp, bottom = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(top = 24.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
     ) {
-        // User Profile Picture
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-                .border(2.dp, BluePrimary, CircleShape),
-            contentScale = ContentScale.Crop
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // User Profile Picture
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_background),
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, Color.LightGray, CircleShape),
+                contentScale = ContentScale.Crop
+            )
+            
+            // Stats
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                ProfileStatItem(postsCount.toString(), "Posts")
+                ProfileStatItem(favCount.toString(), "Saved")
+            }
+        }
+        
         Spacer(modifier = Modifier.height(12.dp))
-        // User Name
+        
+        // User Name and Bio
         Text(
-            text = "Gyanu",
-            fontSize = 22.sp,
+            text = userName,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2D3E50)
         )
@@ -189,17 +248,6 @@ fun ProfileHeaderSection(postsCount: Int, favCount: Int) {
             fontSize = 14.sp,
             color = Color.Gray
         )
-        
-        Spacer(modifier = Modifier.height(20.dp))
-        
-        // Simple Stats - Posts and Favourites count
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            ProfileStatItem(postsCount.toString(), "Posts")
-            ProfileStatItem(favCount.toString(), "Favourites")
-        }
     }
 }
 
@@ -208,13 +256,5 @@ fun ProfileStatItem(count: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = count, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color(0xFF2D3E50))
         Text(text = label, fontSize = 12.sp, color = Color.Gray)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MyProfileScreenPreview() {
-    MyRoamNepalTheme {
-        MyProfileScreen()
     }
 }

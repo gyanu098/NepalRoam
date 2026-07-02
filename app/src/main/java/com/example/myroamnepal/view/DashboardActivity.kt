@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,10 +30,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.myroamnepal.R
+import com.example.myroamnepal.model.PlaceModel
+import com.example.myroamnepal.repo.PlaceRepoImpl
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.LightGray
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.PlaceViewModel
+import com.example.myroamnepal.viewModel.PlaceViewModelFactory
+import com.example.myroamnepal.viewModel.UserViewModel
 
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,23 +48,28 @@ class DashboardActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                DashboardScreen()
+                val context = LocalContext.current
+                val userViewModel: UserViewModel = viewModel()
+                val placeViewModel: PlaceViewModel = viewModel(
+                    factory = PlaceViewModelFactory(PlaceRepoImpl(context))
+                )
+                DashboardScreen(userViewModel = userViewModel, placeViewModel = placeViewModel)
             }
         }
     }
 }
 
-data class Destination(val name: String, val imageRes: Int)
-
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(userViewModel: UserViewModel, placeViewModel: PlaceViewModel) {
     val context = LocalContext.current
-    val destinations = listOf(
-        Destination("Cave", R.drawable.placeone),
-        Destination("Hidden lake", R.drawable.placetwo),
-        Destination("Waterfall near kathmandu", R.drawable.three),
-        Destination("Beautiful temple", R.drawable.four)
-    )
+    val user by userViewModel.user.collectAsState()
+    val places by placeViewModel.places.collectAsState()
+    val loading by placeViewModel.loading.collectAsState()
+
+    LaunchedEffect(Unit) {
+        userViewModel.loadCurrentUser()
+        placeViewModel.getAllPlaces()
+    }
 
     Scaffold(
         topBar = { TopBar() },
@@ -70,21 +83,34 @@ fun DashboardScreen() {
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            GreetingSection()
+            GreetingSection(userName = user?.fullName ?: "Guest")
             Spacer(modifier = Modifier.height(24.dp))
             CategorySection(onUploadClick = {
                 context.startActivity(Intent(context, AddPlaceActivity::class.java))
             })
             Spacer(modifier = Modifier.height(24.dp))
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(destinations) { destination ->
-                    DestinationCard(destination) {
-                        context.startActivity(Intent(context, PlaceDetailActivity::class.java))
+            
+            if (loading && places.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = BluePrimary)
+                }
+            } else if (places.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No places found. Be the first to upload!", color = Color.Gray)
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(places) { place ->
+                        PlaceCard(place) {
+                            val intent = Intent(context, PlaceDetailActivity::class.java)
+                            intent.putExtra("PLACE_ID", place.id)
+                            context.startActivity(intent)
+                        }
                     }
                 }
             }
@@ -150,10 +176,10 @@ fun TopBar() {
 }
 
 @Composable
-fun GreetingSection() {
+fun GreetingSection(userName: String) {
     Column {
         Text(
-            text = "Welcome, Gyanu!",
+            text = "Welcome, $userName!",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = BluePrimary
@@ -208,7 +234,7 @@ fun CategoryChip(text: String, isSelected: Boolean = false) {
 }
 
 @Composable
-fun DestinationCard(destination: Destination, onClick: () -> Unit) {
+fun PlaceCard(place: PlaceModel, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -218,11 +244,13 @@ fun DestinationCard(destination: Destination, onClick: () -> Unit) {
     ) {
         Column {
             Box(modifier = Modifier.height(120.dp).fillMaxWidth()) {
-                Image(
-                    painter = painterResource(id = destination.imageRes),
-                    contentDescription = destination.name,
+                AsyncImage(
+                    model = place.imageUrl,
+                    contentDescription = place.name,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    placeholder = painterResource(id = R.drawable.three),
+                    error = painterResource(id = R.drawable.three)
                 )
             }
             Box(
@@ -232,7 +260,7 @@ fun DestinationCard(destination: Destination, onClick: () -> Unit) {
                     .padding(8.dp)
             ) {
                 Text(
-                    text = destination.name,
+                    text = place.name,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
@@ -271,13 +299,5 @@ fun BottomNavigation() {
                 context.startActivity(Intent(context, MyProfileActivity::class.java))
             }
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DashboardPreview() {
-    MyRoamNepalTheme {
-        DashboardScreen()
     }
 }

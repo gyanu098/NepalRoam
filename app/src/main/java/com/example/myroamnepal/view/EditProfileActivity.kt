@@ -2,12 +2,14 @@ package com.example.myroamnepal.view
 
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,14 +44,20 @@ import coil.compose.AsyncImage
 import com.example.myroamnepal.R
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.UserViewModel
 
 class EditProfileActivity : ComponentActivity() {
+    private val userViewModel: UserViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                EditProfileScreen(onBack = { finish() })
+                EditProfileScreen(
+                    viewModel = userViewModel,
+                    onBack = { finish() }
+                )
             }
         }
     }
@@ -56,11 +65,15 @@ class EditProfileActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditProfileScreen(onBack: () -> Unit) {
-    var name by remember { mutableStateOf("Gyanu") }
-    var email by remember { mutableStateOf("gyanu@example.com") }
-    var phone by remember { mutableStateOf("+977 9800000000") }
-    var address by remember { mutableStateOf("Kathmandu, Nepal") }
+fun EditProfileScreen(viewModel: UserViewModel, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val user by viewModel.user.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val message by viewModel.message.collectAsState()
+
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
     
     // State to hold the selected image URI
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -70,6 +83,28 @@ fun EditProfileScreen(onBack: () -> Unit) {
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri -> selectedImageUri = uri }
     )
+
+    LaunchedEffect(Unit) {
+        viewModel.loadCurrentUser()
+    }
+
+    LaunchedEffect(user) {
+        user?.let {
+            name = it.fullName
+            email = it.email
+            phone = it.phone
+        }
+    }
+
+    LaunchedEffect(message) {
+        message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            if (it == "Update Successful" || it.contains("successful", ignoreCase = true)) {
+                onBack()
+            }
+            viewModel.clearMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -161,28 +196,24 @@ fun EditProfileScreen(onBack: () -> Unit) {
                         label = "Full Name",
                         value = name,
                         onValueChange = { name = it },
-                        icon = Icons.Default.Person
+                        icon = Icons.Default.Person,
+                        enabled = !loading
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     EditProfileTextField(
-                        label = "Email",
+                        label = "Email (Cannot be changed)",
                         value = email,
-                        onValueChange = { email = it },
-                        icon = Icons.Default.Email
+                        onValueChange = { },
+                        icon = Icons.Default.Email,
+                        enabled = false
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     EditProfileTextField(
                         label = "Phone",
                         value = phone,
                         onValueChange = { phone = it },
-                        icon = Icons.Default.Phone
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    EditProfileTextField(
-                        label = "Address",
-                        value = address,
-                        onValueChange = { address = it },
-                        icon = Icons.Default.LocationOn
+                        icon = Icons.Default.Phone,
+                        enabled = !loading
                     )
                 }
             }
@@ -191,13 +222,22 @@ fun EditProfileScreen(onBack: () -> Unit) {
 
             // Save Changes Button
             Button(
-                onClick = { /* Handle save changes logic here */ onBack() },
+                onClick = { 
+                    user?.let {
+                        viewModel.updateUser(it.uid, name, phone)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
                 shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(vertical = 14.dp)
+                contentPadding = PaddingValues(vertical = 14.dp),
+                enabled = !loading
             ) {
-                Text(text = "Save Changes", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (loading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(text = "Save Changes", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -208,7 +248,8 @@ fun EditProfileTextField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    icon: ImageVector
+    icon: ImageVector,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
@@ -222,14 +263,7 @@ fun EditProfileTextField(
             unfocusedBorderColor = Color.LightGray,
             focusedLabelColor = BluePrimary
         ),
-        singleLine = true
+        singleLine = true,
+        enabled = enabled
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun EditProfileScreenPreview() {
-    MyRoamNepalTheme {
-        EditProfileScreen(onBack = {})
-    }
 }

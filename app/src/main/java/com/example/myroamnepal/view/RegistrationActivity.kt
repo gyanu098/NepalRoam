@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,18 +41,21 @@ import androidx.compose.ui.unit.sp
 import com.example.myroamnepal.R
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.UserViewModel
 
 class RegistrationActivity : ComponentActivity() {
+    private val userViewModel: UserViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
                 RegistrationScreen(
+                    viewModel = userViewModel,
                     onRegisterSuccess = {
-                        // Work flow: Registration -> Login
-                        Toast.makeText(this, "Registration Successful! Please Login.", Toast.LENGTH_SHORT).show()
-                        finish() // Returns to LoginActivity
+                        Toast.makeText(this, "Registration Successful!", Toast.LENGTH_SHORT).show()
+                        finish()
                     },
                     onBackToLogin = {
                         finish()
@@ -61,14 +67,33 @@ class RegistrationActivity : ComponentActivity() {
 }
 
 @Composable
-fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit) {
+fun RegistrationScreen(
+    viewModel: UserViewModel,
+    onRegisterSuccess: () -> Unit,
+    onBackToLogin: () -> Unit
+) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    
+
+    val message by viewModel.message.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(message) {
+        message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            if (it == "Signup Successful") {
+                onRegisterSuccess()
+            }
+            viewModel.clearMessage()
+        }
+    }
+
     val scrollState = rememberScrollState()
 
     Column(
@@ -84,7 +109,6 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Circular Logo Structure
         Box(
             modifier = Modifier
                 .size(100.dp)
@@ -118,7 +142,6 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(32.dp))
 
-
         OutlinedTextField(
             value = fullName,
             onValueChange = { fullName = it },
@@ -136,7 +159,6 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
 
         OutlinedTextField(
             value = email,
@@ -157,6 +179,24 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { phone = it },
+            label = { Text("Phone Number") },
+            placeholder = { Text("98********") },
+            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = BluePrimary) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BluePrimary,
+                focusedLabelColor = BluePrimary,
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = password,
@@ -186,7 +226,6 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
@@ -215,26 +254,40 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
 
         Spacer(modifier = Modifier.height(32.dp))
 
-
         Button(
-            onClick = onRegisterSuccess,
+            onClick = {
+                viewModel.registerUser(
+                    fullName = fullName,
+                    email = email,
+                    phone = phone,
+                    password = password,
+                    confirmPassword = confirmPassword,
+                    onSuccess = {
+                        // This callback is currently handled by LaunchedEffect above via "Signup Successful" message
+                    }
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
+            enabled = !loading,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
-            Text(
-                "Sign Up",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            if (loading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text(
+                    "Sign Up",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
 
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -253,13 +306,5 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit, onBackToLogin: () -> Unit)
         }
         
         Spacer(modifier = Modifier.height(20.dp))
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RegistrationPreview() {
-    MyRoamNepalTheme {
-        RegistrationScreen(onRegisterSuccess = {}, onBackToLogin = {})
     }
 }

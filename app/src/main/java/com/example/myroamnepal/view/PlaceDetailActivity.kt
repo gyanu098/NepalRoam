@@ -38,17 +38,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.myroamnepal.R
+import com.example.myroamnepal.model.PlaceModel
+import com.example.myroamnepal.repo.PlaceRepoImpl
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.PlaceViewModel
+import com.example.myroamnepal.viewModel.PlaceViewModelFactory
 
 class PlaceDetailActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val placeId = intent.getStringExtra("PLACE_ID") ?: ""
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                PlaceDetailScreen()
+                val context = LocalContext.current
+                val placeViewModel: PlaceViewModel = viewModel(
+                    factory = PlaceViewModelFactory(PlaceRepoImpl(context))
+                )
+                PlaceDetailScreen(placeId = placeId, viewModel = placeViewModel)
             }
         }
     }
@@ -58,9 +69,24 @@ val DarkBlueText = Color(0xFF2D3E50)
 val LightGrayBg = Color(0xFFF8F9FA)
 
 @Composable
-fun PlaceDetailScreen() {
+fun PlaceDetailScreen(placeId: String, viewModel: PlaceViewModel) {
     val context = LocalContext.current
     var isFavorite by remember { mutableStateOf(false) }
+    var place by remember { mutableStateOf<PlaceModel?>(null) }
+    val loading by viewModel.loading.collectAsState()
+
+    LaunchedEffect(placeId) {
+        if (placeId.isNotEmpty()) {
+            // Fetch place details. We could add a getPlaceById to ViewModel as well.
+            // For now, let's find it from the existing list if already loaded, 
+            // or we could fetch it directly.
+            PlaceRepoImpl(context).getPlaceById(placeId) { success, data, msg ->
+                if (success) {
+                    place = data
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -103,183 +129,136 @@ fun PlaceDetailScreen() {
             }
         },
         bottomBar = {
-            NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    selected = false,
-                    label = { Text("Home") },
-                    onClick = {
-                        val intent = Intent(context, DashboardActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                        context.startActivity(intent)
-                    }
-                )
-
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.FavoriteBorder, contentDescription = "Favorites") },
-                    selected = false,
-                    label = { Text("Favorites") },
-                    onClick = {
-                        context.startActivity(Intent(context, FavoritesActivity::class.java))
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Person, contentDescription = "Profile") },
-                    selected = false,
-                    label = { Text("Profile") },
-                    onClick = {
-                        context.startActivity(Intent(context, MyProfileActivity::class.java))
-                    }
-                )
-            }
+            BottomNavigation()
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .background(LightGrayBg)
-        ) {
-
-            Box(modifier = Modifier.fillMaxWidth().height(260.dp)) {
-                Image(
-                    painter = painterResource(id = R.drawable.three), 
-                    contentDescription = "Phewa Lake",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-                
-                // Heart (Favorite) Button
-                IconButton(
-                    onClick = { isFavorite = !isFavorite },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp)
-                        .background(Color.White.copy(alpha = 0.7f), CircleShape)
-                ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Favorite",
-                        tint = if (isFavorite) Color.Red else Color.Gray
-                    )
-                }
+        if (place == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = BluePrimary)
             }
+        } else {
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .background(LightGrayBg)
+            ) {
 
-            Column(modifier = Modifier.padding(16.dp)) {
-
-                Text(
-                    text = "Phewa Lake",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = DarkBlueText
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Beautiful lakeside in Pokhara for boating and mountain views.",
-                    fontSize = 15.sp,
-                    color = Color.Gray,
-                    lineHeight = 20.sp
-                )
-                
-                HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), thickness = 0.5.dp, color = Color.LightGray)
-
-
-                DetailSectionHeader(icon = Icons.Default.LocationOn, title = "Location")
-                Spacer(modifier = Modifier.height(12.dp))
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(2.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Column {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_background), // Mock Map image
-                            contentDescription = "Map View",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp),
-                            contentScale = ContentScale.Crop
+                Box(modifier = Modifier.fillMaxWidth().height(260.dp)) {
+                    AsyncImage(
+                        model = place!!.imageUrl, 
+                        contentDescription = place!!.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(id = R.drawable.three),
+                        error = painterResource(id = R.drawable.three)
+                    )
+                    
+                    // Heart (Favorite) Button
+                    IconButton(
+                        onClick = { isFavorite = !isFavorite },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                            .background(Color.White.copy(alpha = 0.7f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Favorite",
+                            tint = if (isFavorite) Color.Red else Color.Gray
                         )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .background(Color.White),
-                            contentAlignment = Alignment.Center
+                    }
+                }
+
+                Column(modifier = Modifier.padding(16.dp)) {
+
+                    Text(
+                        text = place!!.name,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = DarkBlueText
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = place!!.description,
+                        fontSize = 15.sp,
+                        color = Color.Gray,
+                        lineHeight = 20.sp
+                    )
+                    
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), thickness = 0.5.dp, color = Color.LightGray)
+
+
+                    DetailSectionHeader(icon = Icons.Default.LocationOn, title = "Location")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = place!!.location,
+                        fontSize = 15.sp,
+                        color = DarkBlueText,
+                        modifier = Modifier.padding(start = 32.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    // Best Season Section
+                    DetailSectionHeader(icon = Icons.Outlined.CalendarMonth, title = "Best Season to Visit")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (place!!.bestSeason.isNotEmpty()) place!!.bestSeason else "All year round",
+                        fontSize = 15.sp,
+                        color = DarkBlueText,
+                        modifier = Modifier.padding(start = 32.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Travel Tips Section
+                    DetailSectionHeader(icon = Icons.Default.Info, title = "Travel Tips")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (place!!.tips.isNotEmpty()) place!!.tips else "No tips added yet.",
+                        fontSize = 15.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(start = 32.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.clickable {
+                            context.startActivity(Intent(context, ReviewActivity::class.java))
+                        }) {
+                            DetailSectionHeader(icon = Icons.Default.Star, title = "Reviews")
+                            Spacer(modifier = Modifier.height(12.dp))
+                            ReviewSummary()
+                        }
+                        Button(
+                            onClick = {
+                                context.startActivity(Intent(context, ReviewActivity::class.java))
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                         ) {
-                            Text(
-                                text = "View on Google Maps",
-                                color = DarkBlueText,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
-                            )
+                            Text("Add Review", color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Uploaded by: ${place!!.uploadedByName}",
+                        fontSize = 13.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                    
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                // Best Season Section
-                DetailSectionHeader(icon = Icons.Outlined.CalendarMonth, title = "Best Season to Visit")
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "September to November and March to May for best weather.",
-                    fontSize = 15.sp,
-                    color = DarkBlueText,
-                    modifier = Modifier.padding(start = 32.dp)
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Travel Tips Section
-                DetailSectionHeader(icon = Icons.Default.Info, title = "Travel Tips")
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(modifier = Modifier.padding(start = 32.dp)) {
-                    Text("• Bring a camera for the mountain views.", fontSize = 14.sp, color = Color.Gray)
-                    Text("• Boat during sunset for the best lighting.", fontSize = 14.sp, color = Color.Gray)
-                }
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.clickable {
-                        context.startActivity(Intent(context, ReviewActivity::class.java))
-                    }) {
-                        DetailSectionHeader(icon = Icons.Default.Star, title = "Reviews")
-                        Spacer(modifier = Modifier.height(12.dp))
-                        ReviewSummary()
-                    }
-                    Button(
-                        onClick = {
-                            context.startActivity(Intent(context, ReviewActivity::class.java))
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Text("Add Review", color = Color.White, fontWeight = FontWeight.Bold)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                ReviewCard(
-                    comment = "Amazing place! Had a great time.",
-                    author = "Sara M.",
-                    rating = 5
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                ReviewCard(
-                    comment = "Beautiful view of the mountains and lake.",
-                    author = "Rahul S.",
-                    rating = 5
-                )
-                
-                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
@@ -301,47 +280,6 @@ fun ReviewSummary() {
             Icon(Icons.Default.Star, contentDescription = null, tint = BluePrimary, modifier = Modifier.size(20.dp))
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "(45 Reviews)", color = Color.Gray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Composable
-fun ReviewCard(comment: String, author: String, rating: Int) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(1.dp)
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Text(
-                    text = comment, 
-                    color = DarkBlueText, 
-                    fontSize = 14.sp, 
-                    modifier = Modifier.weight(1f),
-                    lineHeight = 18.sp
-                )
-                Row {
-                    repeat(rating) {
-                        Icon(Icons.Default.Star, contentDescription = null, tint = BluePrimary, modifier = Modifier.size(16.dp))
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(text = author, color = Color.Gray, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PlaceDetailPreview() {
-    MyRoamNepalTheme {
-        PlaceDetailScreen()
+        Text(text = "(0 Reviews)", color = Color.Gray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }

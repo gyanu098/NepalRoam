@@ -2,9 +2,11 @@ package com.example.myroamnepal.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -26,14 +29,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.UserViewModel
 
 class LoginActivity : ComponentActivity() {
+    private val userViewModel: UserViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
                 LoginScreen(
+                    viewModel = userViewModel,
                     onLoginSuccess = {
                         startActivity(Intent(this, DashboardActivity::class.java))
                         finish()
@@ -48,9 +55,31 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
+fun LoginScreen(
+    viewModel: UserViewModel,
+    onLoginSuccess: () -> Unit,
+    onSignUpClick: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val message by viewModel.message.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val user by viewModel.user.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(message) {
+        message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessage()
+        }
+    }
+
+    LaunchedEffect(user) {
+        if (user != null) {
+            onLoginSuccess()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -100,7 +129,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            enabled = !loading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -113,14 +143,22 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            enabled = !loading
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         TextButton(
-            onClick = { },
-            modifier = Modifier.align(Alignment.End)
+            onClick = { 
+                if (email.isNotBlank()) {
+                    viewModel.sendPasswordResetEmail(email)
+                } else {
+                    Toast.makeText(context, "Please enter your email first", Toast.LENGTH_SHORT).show()
+                }
+            },
+            modifier = Modifier.align(Alignment.End),
+            enabled = !loading
         ) {
             Text("Forgot Password?", color = BluePrimary)
         }
@@ -128,14 +166,19 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = onLoginSuccess,
+            onClick = { viewModel.login(email, password) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BluePrimary)
+            colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
+            enabled = !loading
         ) {
-            Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            if (loading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -144,18 +187,11 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onSignUpClick: () -> Unit) {
             Text("Don't have an account? ", color = Color.Gray)
             TextButton(
                 onClick = onSignUpClick,
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(0.dp),
+                enabled = !loading
             ) {
                 Text("Sign Up", color = BluePrimary, fontWeight = FontWeight.Bold)
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginPreview() {
-    MyRoamNepalTheme {
-        LoginScreen(onLoginSuccess = {}, onSignUpClick = {})
     }
 }

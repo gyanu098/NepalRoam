@@ -2,9 +2,11 @@ package com.example.myroamnepal.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +20,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,14 +36,20 @@ import androidx.compose.ui.unit.sp
 import com.example.myroamnepal.R
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.UserViewModel
 
 class ProfileActivity : ComponentActivity() {
+    private val userViewModel: UserViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                ProfileScreen(onBack = { finish() })
+                ProfileScreen(
+                    viewModel = userViewModel,
+                    onBack = { finish() }
+                )
             }
         }
     }
@@ -49,8 +57,31 @@ class ProfileActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(onBack: () -> Unit) {
+fun ProfileScreen(viewModel: UserViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
+    val user by viewModel.user.collectAsState()
+    val isLoggedOut by viewModel.isLoggedOut.collectAsState()
+    val message by viewModel.message.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadCurrentUser()
+    }
+
+    LaunchedEffect(isLoggedOut) {
+        if (isLoggedOut) {
+            val intent = Intent(context, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            context.startActivity(intent)
+        }
+    }
+
+    LaunchedEffect(message) {
+        message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessage()
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -93,7 +124,7 @@ fun ProfileScreen(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "Gyanu",
+                text = user?.fullName ?: "Guest",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2D3E50)
@@ -114,13 +145,13 @@ fun ProfileScreen(onBack: () -> Unit) {
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    ProfileDetailItem(icon = Icons.Default.Person, label = "Full Name", value = "Gyanu")
+                    ProfileDetailItem(icon = Icons.Default.Person, label = "Full Name", value = user?.fullName ?: "N/A")
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
-                    ProfileDetailItem(icon = Icons.Default.Email, label = "Email", value = "gyanu@example.com")
+                    ProfileDetailItem(icon = Icons.Default.Email, label = "Email", value = user?.email ?: "N/A")
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
-                    ProfileDetailItem(icon = Icons.Default.Phone, label = "Phone", value = "+977 9800000000")
+                    ProfileDetailItem(icon = Icons.Default.Phone, label = "Phone", value = user?.phone ?: "N/A")
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
-                    ProfileDetailItem(icon = Icons.Default.LocationOn, label = "Address", value = "Kathmandu, Nepal")
+                    ProfileDetailItem(icon = Icons.Default.LocationOn, label = "Role", value = user?.role ?: "User")
                 }
             }
             
@@ -144,10 +175,7 @@ fun ProfileScreen(onBack: () -> Unit) {
             // Logout Button
             OutlinedButton(
                 onClick = {
-                    // Navigate to LoginActivity and clear backstack
-                    val intent = Intent(context, LoginActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    context.startActivity(intent)
+                    viewModel.logOut()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -177,13 +205,5 @@ fun ProfileDetailItem(icon: ImageVector, label: String, value: String) {
             Text(text = label, fontSize = 12.sp, color = Color.Gray)
             Text(text = value, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color(0xFF2D3E50))
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreview() {
-    MyRoamNepalTheme {
-        ProfileScreen(onBack = {})
     }
 }

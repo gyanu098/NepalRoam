@@ -31,6 +31,8 @@ import com.example.myroamnepal.R
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
 
+data class Destination(val name: String, val imageRes: Int)
+
 class FavoritesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

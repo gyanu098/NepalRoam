@@ -5,12 +5,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -25,16 +29,28 @@ import androidx.compose.ui.unit.sp
 import com.example.myroamnepal.R
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.UserViewModel
 
 class SplashScreen : ComponentActivity() {
+    private val userViewModel: UserViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
+                val user by userViewModel.user.collectAsState()
+
+                LaunchedEffect(Unit) {
+                    userViewModel.loadCurrentUser()
+                }
+
                 SplashContent(onGetStartedClick = {
-                    // Work flow: Splash -> Login
-                    startActivity(Intent(this, LoginActivity::class.java))
+                    if (user != null) {
+                        startActivity(Intent(this, DashboardActivity::class.java))
+                    } else {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                    }
                     finish()
                 })
             }
@@ -45,7 +61,6 @@ class SplashScreen : ComponentActivity() {
 @Composable
 fun SplashContent(onGetStartedClick: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image
         Image(
             painter = painterResource(id = R.drawable.three),
             contentDescription = null,
@@ -53,7 +68,7 @@ fun SplashContent(onGetStartedClick: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // Blue Overlay Gradient
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,7 +91,7 @@ fun SplashContent(onGetStartedClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top Logo
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(top = 300.dp)
@@ -97,7 +112,7 @@ fun SplashContent(onGetStartedClick: () -> Unit) {
                     .padding(bottom = 300.dp)
             ) {
 
-                // Slogan
+
                 Text(
                     text = "Discover Nepal's Hidden Gems",
                     color = Color.White,
@@ -108,7 +123,7 @@ fun SplashContent(onGetStartedClick: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // Get Started Button
+
                 Button(
                     onClick = onGetStartedClick,
                     modifier = Modifier
@@ -131,13 +146,5 @@ fun SplashContent(onGetStartedClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(20.dp))
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SplashPreview() {
-    MyRoamNepalTheme {
-        SplashContent(onGetStartedClick = {})
     }
 }
