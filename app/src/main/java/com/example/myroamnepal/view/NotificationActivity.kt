@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myroamnepal.view.ui.theme.BluePrimary
@@ -51,36 +50,58 @@ fun NotificationScreen(onBack: () -> Unit) {
     )
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Notifications", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = BluePrimary)
-            )
-        }
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        if (notifications.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "No notifications yet", color = Color.Gray)
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
+        ) {
+            // Movable Header
+            item {
+                Surface(
+                    color = BluePrimary,
+                    shadowElevation = 4.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Notifications",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .background(Color(0xFFF8F9FA)),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+
+            if (notifications.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "No notifications yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            } else {
                 items(notifications) { notification ->
                     NotificationCard(notification)
                 }
@@ -91,11 +112,10 @@ fun NotificationScreen(onBack: () -> Unit) {
 
 @Composable
 fun NotificationCard(notification: NotificationItem) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(1.dp)
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -119,30 +139,22 @@ fun NotificationCard(notification: NotificationItem) {
                 Text(
                     text = notification.title,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2D3E50),
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 16.sp
                 )
                 Text(
                     text = notification.message,
-                    color = Color.DarkGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp,
                     lineHeight = 20.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = notification.time,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.outline,
                     fontSize = 12.sp
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun NotificationScreenPreview() {
-    MyRoamNepalTheme {
-        NotificationScreen(onBack = {})
     }
 }

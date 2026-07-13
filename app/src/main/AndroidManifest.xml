@@ -82,6 +82,16 @@
             android:label="My Profile"
             android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
+            android:name=".view.SettingsActivity"
+            android:exported="true"
+            android:label="Settings"
+            android:theme="@style/Theme.MyRoamNepal"></activity>
+        <activity
+            android:name=".view.ChangePasswordActivity"
+            android:exported="true"
+            android:label="Change Password"
+            android:theme="@style/Theme.MyRoamNepal"></activity>
+        <activity
             android:name=".view.FavoritesActivity"
             android:exported="true"
             android:label="Favorites"

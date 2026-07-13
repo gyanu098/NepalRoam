@@ -11,6 +11,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.myroamnepal.R
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
@@ -95,94 +97,113 @@ fun ProfileScreen(viewModel: UserViewModel, onBack: () -> Unit) {
             )
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF8F9FA))
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(Color(0xFFF8F9FA)),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = PaddingValues(20.dp)
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
-            
-            // Profile Picture Section
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .border(3.dp, BluePrimary, CircleShape)
-                    .background(Color.White)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background), // Default placeholder
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = user?.fullName ?: "Guest",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF2D3E50)
-            )
-            Text(
-                text = "Travel Enthusiast",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // User Details Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    ProfileDetailItem(icon = Icons.Default.Person, label = "Full Name", value = user?.fullName ?: "N/A")
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
-                    ProfileDetailItem(icon = Icons.Default.Email, label = "Email", value = user?.email ?: "N/A")
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
-                    ProfileDetailItem(icon = Icons.Default.Phone, label = "Phone", value = user?.phone ?: "N/A")
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
-                    ProfileDetailItem(icon = Icons.Default.LocationOn, label = "Role", value = user?.role ?: "User")
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
+                
+
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .border(3.dp, BluePrimary, CircleShape)
+                        .background(Color.White)
+                ) {
+                    if (user?.profileImageUrl?.isNotEmpty() == true) {
+                        AsyncImage(
+                            model = user!!.profileImageUrl,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(id = R.drawable.ic_launcher_background),
+                            error = painterResource(id = R.drawable.ic_launcher_background)
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_background),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = user?.fullName ?: "Guest",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2D3E50)
+                )
+                Text(
+                    text = "Travel Enthusiast",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Edit Profile Button
-            Button(
-                onClick = { 
-                    context.startActivity(Intent(context, EditProfileActivity::class.java))
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(vertical = 12.dp)
-            ) {
-                Text(text = "Edit Profile", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            item {
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        ProfileDetailItem(icon = Icons.Default.Person, label = "Full Name", value = user?.fullName ?: "N/A")
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
+                        ProfileDetailItem(icon = Icons.Default.Email, label = "Email", value = user?.email ?: "N/A")
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
+                        ProfileDetailItem(icon = Icons.Default.Phone, label = "Phone", value = user?.phone ?: "N/A")
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
+                        ProfileDetailItem(icon = Icons.Default.LocationOn, label = "Role", value = user?.role ?: "User")
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            item {
+
+                Button(
+                    onClick = { 
+                        context.startActivity(Intent(context, EditProfileActivity::class.java))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    Text(text = "Edit Profile", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+            }
             
-            // Logout Button
-            OutlinedButton(
-                onClick = {
-                    viewModel.logOut()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red),
-                contentPadding = PaddingValues(vertical = 12.dp)
-            ) {
-                Text(text = "Logout", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Red)
+            item {
+
+                OutlinedButton(
+                    onClick = {
+                        viewModel.logOut()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    Text(text = "Logout", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Red)
+                }
             }
         }
     }

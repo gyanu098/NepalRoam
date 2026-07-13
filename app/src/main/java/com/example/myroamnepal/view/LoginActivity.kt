@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -24,7 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myroamnepal.view.ui.theme.BluePrimary
@@ -81,116 +81,139 @@ fun LoginScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Logo and App Name
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.Place,
-                contentDescription = "Logo",
-                tint = BluePrimary,
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "RoamNepal",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = BluePrimary
-            )
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Text(
-            text = "Welcome Back",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.DarkGray
-        )
-        Text(
-            text = "Login to your account to continue",
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email Address") },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            enabled = !loading
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            enabled = !loading
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TextButton(
-            onClick = { 
-                if (email.isNotBlank()) {
-                    viewModel.sendPasswordResetEmail(email)
-                } else {
-                    Toast.makeText(context, "Please enter your email first", Toast.LENGTH_SHORT).show()
-                }
-            },
-            modifier = Modifier.align(Alignment.End),
-            enabled = !loading
-        ) {
-            Text("Forgot Password?", color = BluePrimary)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { viewModel.login(email, password) },
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
-            enabled = !loading
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            if (loading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-            } else {
-                Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-        }
+            item {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier.height(48.dp))
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Place,
+                            contentDescription = "Logo",
+                            tint = BluePrimary,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "RoamNepal",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = BluePrimary
+                        )
+                    }
 
-        Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(48.dp))
 
-        Row {
-            Text("Don't have an account? ", color = Color.Gray)
-            TextButton(
-                onClick = onSignUpClick,
-                contentPadding = PaddingValues(0.dp),
-                enabled = !loading
-            ) {
-                Text("Sign Up", color = BluePrimary, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Welcome Back",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = "Login to your account to continue",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email Address") },
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = BluePrimary) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        enabled = !loading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BluePrimary,
+                            focusedLabelColor = BluePrimary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password") },
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BluePrimary) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        enabled = !loading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BluePrimary,
+                            focusedLabelColor = BluePrimary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                        TextButton(
+                            onClick = { 
+                                if (email.isNotBlank()) {
+                                    viewModel.sendPasswordResetEmail(email)
+                                } else {
+                                    Toast.makeText(context, "Please enter your email first", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            enabled = !loading
+                        ) {
+                            Text("Forgot Password?", color = BluePrimary)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = { viewModel.login(email, password) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
+                        enabled = !loading
+                    ) {
+                        if (loading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        Text("Don't have an account? ", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        TextButton(
+                            onClick = onSignUpClick,
+                            contentPadding = PaddingValues(0.dp),
+                            enabled = !loading
+                        ) {
+                            Text("Sign Up", color = BluePrimary, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(48.dp))
+                }
             }
         }
     }

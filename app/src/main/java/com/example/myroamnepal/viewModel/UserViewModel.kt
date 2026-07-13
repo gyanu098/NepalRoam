@@ -164,15 +164,28 @@ class UserViewModel(private val repo: UserRepo = UserRepoImpl()) : ViewModel() {
         }
     }
 
-    fun updateUser(uid: String, fullName: String, phone: String) {
+    fun updateUser(uid: String, fullName: String, phone: String, profileImageUrl: String) {
         if (fullName.isBlank() || phone.isBlank()) {
             _message.value = "All fields are required"
             return
         }
 
         _loading.value = true
-        repo.updateUser(UserModel(uid = uid, fullName = fullName, phone = phone)) { success, msg ->
+        repo.updateUser(UserModel(uid = uid, fullName = fullName, phone = phone, profileImageUrl = profileImageUrl)) { success, msg ->
             _loading.value = false
+            _message.value = msg
+            if (success) {
+                loadCurrentUser() // Refresh local user data
+            }
+        }
+    }
+
+    fun toggleFavorite(placeId: String) {
+        val currentUser = _user.value ?: return
+        repo.toggleFavorite(currentUser.uid, placeId) { success, msg ->
+            if (success) {
+                loadCurrentUser() // Refresh user data to get updated favorites list
+            }
             _message.value = msg
         }
     }

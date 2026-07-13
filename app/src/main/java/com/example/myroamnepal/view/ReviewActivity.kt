@@ -1,6 +1,7 @@
 package com.example.myroamnepal.view
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,82 +20,144 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myroamnepal.model.ReviewModel
+import com.example.myroamnepal.repo.ReviewRepoImpl
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
+import com.example.myroamnepal.viewModel.ReviewViewModel
+import com.example.myroamnepal.viewModel.ReviewViewModelFactory
+import com.example.myroamnepal.viewModel.UserViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ReviewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val placeId = intent.getStringExtra("PLACE_ID") ?: ""
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                ReviewScreen(onBack = { finish() })
+                val reviewViewModel: ReviewViewModel = viewModel(
+                    factory = ReviewViewModelFactory(ReviewRepoImpl())
+                )
+                val userViewModel: UserViewModel = viewModel()
+                
+                ReviewScreen(
+                    placeId = placeId,
+                    reviewViewModel = reviewViewModel,
+                    userViewModel = userViewModel,
+                    onBack = { finish() }
+                )
             }
         }
     }
 }
 
-data class ReviewItem(val author: String, val comment: String, val rating: Int, val date: String)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReviewScreen(onBack: () -> Unit) {
-    // States for the new review input
+fun ReviewScreen(
+    placeId: String,
+    reviewViewModel: ReviewViewModel,
+    userViewModel: UserViewModel,
+    onBack: () -> Unit
+) {
     var rating by remember { mutableIntStateOf(0) }
     var reviewText by remember { mutableStateOf("") }
     
-    // Using mutableStateListOf to make the list reactive for local additions
-    val reviews = remember {
-        mutableStateListOf(
-            ReviewItem("Sara M.", "Amazing place! Had a great time.", 5, "2 days ago"),
-            ReviewItem("Rahul S.", "Beautiful view of the mountains and lake.", 5, "1 week ago"),
-            ReviewItem("John D.", "A bit crowded on weekends, but worth it.", 4, "2 weeks ago"),
-            ReviewItem("Anita K.", "Loved the boating experience!", 5, "1 month ago")
-        )
+    val context = LocalContext.current
+    val reviews by reviewViewModel.reviews.collectAsState()
+    val loading by reviewViewModel.loading.collectAsState()
+    val message by reviewViewModel.message.collectAsState()
+    val user by userViewModel.user.collectAsState()
+
+    LaunchedEffect(placeId) {
+        reviewViewModel.getReviewsByPlace(placeId)
+        userViewModel.loadCurrentUser()
+    }
+
+    LaunchedEffect(message) {
+        message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            reviewViewModel.clearMessage()
+            if (it == "Review added successfully") {
+                rating = 0
+                reviewText = ""
+            }
+        }
     }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Reviews & Ratings", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = BluePrimary)
-            )
-        }
+        containerColor = Color(0xFFF8F9FA)
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .background(Color(0xFFF8F9FA)),
-            contentPadding = PaddingValues(16.dp),
+                .fillMaxSize(),
+            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Write Review Section at the top
+
             item {
-                WriteReviewCard(
-                    rating = rating,
-                    onRatingChange = { rating = it },
-                    reviewText = reviewText,
-                    onReviewTextChange = { reviewText = it },
-                    onSubmit = {
-                        if (rating > 0 && reviewText.isNotBlank()) {
-                            reviews.add(0, ReviewItem("Gyanu", reviewText, rating, "Just now"))
-                            // Reset input fields
-                            rating = 0
-                            reviewText = ""
+                Surface(
+                    color = BluePrimary,
+                    shadowElevation = 4.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Reviews & Ratings",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                )
+                }
             }
+
+
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    WriteReviewCard(
+                        rating = rating,
+                        onRatingChange = { rating = it },
+                        reviewText = reviewText,
+                        onReviewTextChange = { reviewText = it },
+                        loading = loading,
+                        onSubmit = {
+                            if (user != null) {
+                                val newReview = ReviewModel(
+                                    placeId = placeId,
+                                    userId = user!!.uid,
+                                    userName = user!!.fullName,
+                                    rating = rating.toDouble(),
+                                    comment = reviewText
+                                )
+                                reviewViewModel.addReview(newReview)
+                            } else {
+                                Toast.makeText(context, "Please login to add a review", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+                }
+            }
+
 
             item {
                 Text(
@@ -102,13 +165,28 @@ fun ReviewScreen(onBack: () -> Unit) {
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2D3E50),
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
 
-            // List of existing reviews
-            items(reviews) { review ->
-                ReviewListItem(review)
+
+            if (reviews.isEmpty() && !loading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No reviews yet. Be the first to review!", color = Color.Gray)
+                    }
+                }
+            } else {
+                items(reviews) { review ->
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        ReviewListItem(review)
+                    }
+                }
             }
         }
     }
@@ -120,6 +198,7 @@ fun WriteReviewCard(
     onRatingChange: (Int) -> Unit,
     reviewText: String,
     onReviewTextChange: (String) -> Unit,
+    loading: Boolean,
     onSubmit: () -> Unit
 ) {
     Card(
@@ -138,7 +217,6 @@ fun WriteReviewCard(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Star Rating Input
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -158,7 +236,6 @@ fun WriteReviewCard(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Review Text Input
             OutlinedTextField(
                 value = reviewText,
                 onValueChange = onReviewTextChange,
@@ -175,27 +252,35 @@ fun WriteReviewCard(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Submit Button
             Button(
                 onClick = onSubmit,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
                 shape = RoundedCornerShape(12.dp),
-                enabled = rating > 0 && reviewText.isNotBlank()
+                enabled = !loading && rating > 0 && reviewText.isNotBlank()
             ) {
-                Text(
-                    text = "Submit Review",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                if (loading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(
+                        text = "Submit Review",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun ReviewListItem(review: ReviewItem) {
+fun ReviewListItem(review: ReviewModel) {
+    val date = remember(review.timestamp) {
+        val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        sdf.format(Date(review.timestamp))
+    }
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -209,14 +294,13 @@ fun ReviewListItem(review: ReviewItem) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = review.author,
+                    text = review.userName,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2D3E50),
                     fontSize = 16.sp
                 )
-                Text(text = review.date, color = Color.Gray, fontSize = 12.sp)
+                Text(text = date, color = Color.Gray, fontSize = 12.sp)
             }
-            // Display Rating Stars
             Row(modifier = Modifier.padding(vertical = 4.dp)) {
                 repeat(5) { index ->
                     Icon(
@@ -235,13 +319,5 @@ fun ReviewListItem(review: ReviewItem) {
                 lineHeight = 20.sp
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ReviewScreenPreview() {
-    MyRoamNepalTheme {
-        ReviewScreen(onBack = {})
     }
 }

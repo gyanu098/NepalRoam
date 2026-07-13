@@ -9,18 +9,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddAPhoto
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,7 +47,6 @@ class AddPlaceActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                // Using a factory because PlaceRepoImpl needs context
                 val context = LocalContext.current
                 val placeViewModel: PlaceViewModel = viewModel(
                     factory = PlaceViewModelFactory(PlaceRepoImpl(context))
@@ -106,187 +102,208 @@ fun AddPlaceScreen(
     )
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Add Hidden Place",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = BluePrimary
-                )
-            )
-        },
         bottomBar = {
-            Button(
-                onClick = {
-                    user?.let {
-                        placeViewModel.addPlace(
-                            name = name,
-                            description = description,
-                            tips = tips,
-                            bestSeason = bestSeason,
-                            location = location,
-                            imageUri = imageUri,
-                            uploadedBy = it.uid,
-                            uploadedByName = it.fullName
-                        )
-                    } ?: run {
-                        Toast.makeText(context, "User not logged in", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(56.dp),
-                enabled = !loading,
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BluePrimary)
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                tonalElevation = 8.dp,
+                color = MaterialTheme.colorScheme.surface
             ) {
-                if (loading) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                } else {
-                    Text("Post Place", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Place Photo Selection
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF0F0F0))
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
-                    .clickable {
-                        photoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
+                Button(
+                    onClick = {
+                        user?.let {
+                            placeViewModel.addPlace(
+                                name = name,
+                                description = description,
+                                tips = tips,
+                                bestSeason = bestSeason,
+                                location = location,
+                                imageUri = imageUri,
+                                uploadedBy = it.uid,
+                                uploadedByName = it.fullName
+                            )
+                        } ?: run {
+                            Toast.makeText(context, "User not logged in", Toast.LENGTH_SHORT).show()
+                        }
                     },
-                contentAlignment = Alignment.Center
-            ) {
-                if (imageUri != null) {
-                    AsyncImage(
-                        model = imageUri,
-                        contentDescription = "Selected Photo",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.AddAPhoto,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(48.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(56.dp),
+                    enabled = !loading,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = BluePrimary)
+                ) {
+                    if (loading) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text("Post Gem", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(bottom = innerPadding.calculateBottomPadding())
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Movable Header
+            item {
+                Surface(color = BluePrimary, shadowElevation = 4.dp) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Add Hidden Gem",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Add Place Photo", color = Color.Gray)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            item {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Share a secret place with the community",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
 
-            // Place Name
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Place Name") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BluePrimary,
-                    unfocusedBorderColor = Color.LightGray
-                )
-            )
+                    // Place Photo Selection
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+                            .clickable {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (imageUri != null) {
+                            AsyncImage(
+                                model = imageUri,
+                                contentDescription = "Selected Photo",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.AddAPhoto,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text("Add Place Photo", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-            // Description
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description / Tag") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BluePrimary,
-                    unfocusedBorderColor = Color.LightGray
-                )
-            )
+                    AddPlaceTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = "Place Name",
+                        placeholder = "e.g. Hidden Waterfall"
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            // Add Tips
-            OutlinedTextField(
-                value = tips,
-                onValueChange = { tips = it },
-                label = { Text("Tips (Optional)") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BluePrimary,
-                    unfocusedBorderColor = Color.LightGray
-                )
-            )
+                    AddPlaceTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = "Description / Tag",
+                        placeholder = "Tell us about this place...",
+                        singleLine = false,
+                        minLines = 3
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            // Best Season
-            OutlinedTextField(
-                value = bestSeason,
-                onValueChange = { bestSeason = it },
-                label = { Text("Best Season to Visit") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BluePrimary,
-                    unfocusedBorderColor = Color.LightGray
-                )
-            )
+                    AddPlaceTextField(
+                        value = tips,
+                        onValueChange = { tips = it },
+                        label = "Travel Tips (Optional)",
+                        placeholder = "What should others know?"
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            // Location
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text("Location (City, District)") },
-                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = BluePrimary) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BluePrimary,
-                    unfocusedBorderColor = Color.LightGray
-                )
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
+                    AddPlaceTextField(
+                        value = bestSeason,
+                        onValueChange = { bestSeason = it },
+                        label = "Best Season to Visit",
+                        placeholder = "e.g. Spring, October-November"
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    AddPlaceTextField(
+                        value = location,
+                        onValueChange = { location = it },
+                        label = "Location (City, District)",
+                        placeholder = "e.g. Pokhara, Kaski",
+                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = BluePrimary) }
+                    )
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
         }
     }
+}
+
+@Composable
+fun AddPlaceTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    leadingIcon: @Composable (() -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        placeholder = { Text(placeholder) },
+        leadingIcon = leadingIcon,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        singleLine = singleLine,
+        minLines = minLines,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = BluePrimary,
+            focusedLabelColor = BluePrimary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedContainerColor = MaterialTheme.colorScheme.surface
+        )
+    )
 }

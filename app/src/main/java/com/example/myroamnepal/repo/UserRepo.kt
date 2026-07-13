@@ -14,4 +14,5 @@ interface UserRepo {
     fun register(email: String, password: String, callback: (Boolean, String, String) -> Unit)
     fun getAllUsers(callback: (Boolean, String, List<UserModel>) -> Unit)
     fun deleteUser(uid: String, callback: (Boolean, String) -> Unit)
+    fun toggleFavorite(userId: String, placeId: String, callback: (Boolean, String) -> Unit)
 }

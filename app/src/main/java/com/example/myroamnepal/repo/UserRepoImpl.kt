@@ -1,6 +1,7 @@
 package com.example.myroamnepal.repo
 
 import com.example.myroamnepal.model.UserModel
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -68,7 +69,10 @@ class UserRepoImpl : UserRepo {
     override fun changePassword(oldPassword: String, newPassword: String, callback: (Boolean, String) -> Unit) {
         val user = auth.currentUser
         if (user != null && user.email != null) {
-            auth.signInWithEmailAndPassword(user.email!!, oldPassword).addOnCompleteListener { reauthTask ->
+            val credential = EmailAuthProvider.getCredential(user.email!!, oldPassword)
+            
+            // Re-authenticate user before sensitive operation
+            user.reauthenticate(credential).addOnCompleteListener { reauthTask ->
                 if (reauthTask.isSuccessful) {
                     user.updatePassword(newPassword).addOnCompleteListener { updateTask ->
                         if (updateTask.isSuccessful) {
@@ -145,5 +149,33 @@ class UserRepoImpl : UserRepo {
                 callback(false, it.exception?.message ?: "Failed to delete user.")
             }
         }
+    }
+
+    override fun toggleFavorite(userId: String, placeId: String, callback: (Boolean, String) -> Unit) {
+        userRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val user = snapshot.getValue(UserModel::class.java) ?: return callback(false, "User not found")
+                val currentFavorites = user.favorites.toMutableList()
+                
+                val isRemoving = currentFavorites.contains(placeId)
+                if (isRemoving) {
+                    currentFavorites.remove(placeId)
+                } else {
+                    currentFavorites.add(placeId)
+                }
+
+                userRef.child(userId).child("favorites").setValue(currentFavorites).addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        callback(true, if (isRemoving) "Removed from favorites" else "Added to favorites")
+                    } else {
+                        callback(false, it.exception?.message ?: "Failed to update favorites")
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(false, error.message)
+            }
+        })
     }
 }

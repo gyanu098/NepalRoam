@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,22 +15,27 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.myroamnepal.R
+import com.example.myroamnepal.model.PlaceModel
+import com.example.myroamnepal.repo.PlaceRepoImpl
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
-
-data class Destination(val name: String, val imageRes: Int)
+import com.example.myroamnepal.viewModel.PlaceViewModel
+import com.example.myroamnepal.viewModel.PlaceViewModelFactory
+import com.example.myroamnepal.viewModel.UserViewModel
 
 class FavoritesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +43,16 @@ class FavoritesActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
-                FavoritesScreen(onBack = { finish() })
+                val context = LocalContext.current
+                val userViewModel: UserViewModel = viewModel()
+                val placeViewModel: PlaceViewModel = viewModel(
+                    factory = PlaceViewModelFactory(PlaceRepoImpl(context))
+                )
+                FavoritesScreen(
+                    userViewModel = userViewModel,
+                    placeViewModel = placeViewModel,
+                    onBack = { finish() }
+                )
             }
         }
     }
@@ -47,13 +60,25 @@ class FavoritesActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FavoritesScreen(onBack: () -> Unit) {
+fun FavoritesScreen(
+    userViewModel: UserViewModel,
+    placeViewModel: PlaceViewModel,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
-    val favoritePlaces = listOf(
-        Destination("Cave", R.drawable.placeone),
-        Destination("Hidden lake", R.drawable.placetwo),
-        Destination("Waterfall near kathmandu", R.drawable.three)
-    )
+    val user by userViewModel.user.collectAsState()
+    val allPlaces by placeViewModel.places.collectAsState()
+    val loading by placeViewModel.loading.collectAsState()
+
+    LaunchedEffect(Unit) {
+        userViewModel.loadCurrentUser()
+        placeViewModel.getAllPlaces()
+    }
+
+    val favoritePlaces = remember(user, allPlaces) {
+        val favIds = user?.favorites ?: emptyList()
+        allPlaces.filter { it.id in favIds }
+    }
 
     Scaffold(
         topBar = {
@@ -66,39 +91,59 @@ fun FavoritesScreen(onBack: () -> Unit) {
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = BluePrimary)
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        if (favoritePlaces.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.LightGray
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "No favorites yet", color = Color.Gray, fontSize = 18.sp)
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .background(Color(0xFFF8F9FA)),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(favoritePlaces) { place ->
-                    FavoritePlaceCard(place) {
-                        context.startActivity(Intent(context, PlaceDetailActivity::class.java))
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if (favoritePlaces.isEmpty() && !loading) {
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No favorites yet", 
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                                fontSize = 18.sp
+                            )
+                        }
                     }
+                }
+            } else if (loading && favoritePlaces.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = BluePrimary)
+                    }
+                }
+            } else {
+                items(favoritePlaces) { place ->
+                    FavoritePlaceCard(
+                        place = place,
+                        onFavoriteClick = { userViewModel.toggleFavorite(place.id) },
+                        onClick = {
+                            val intent = Intent(context, PlaceDetailActivity::class.java)
+                            intent.putExtra("PLACE_ID", place.id)
+                            context.startActivity(intent)
+                        }
+                    )
                 }
             }
         }
@@ -106,26 +151,29 @@ fun FavoritesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-fun FavoritePlaceCard(place: Destination, onClick: () -> Unit) {
+fun FavoritePlaceCard(place: PlaceModel, onFavoriteClick: () -> Unit, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
-            modifier = Modifier.height(100.dp),
+            modifier = Modifier.height(110.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = place.imageRes),
+            AsyncImage(
+                model = place.imageUrl,
                 contentDescription = place.name,
                 modifier = Modifier
                     .width(120.dp)
-                    .fillMaxHeight(),
-                contentScale = ContentScale.Crop
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = R.drawable.three),
+                error = painterResource(id = R.drawable.three)
             )
             Column(
                 modifier = Modifier
@@ -136,15 +184,18 @@ fun FavoritePlaceCard(place: Destination, onClick: () -> Unit) {
                     text = place.name,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2D3E50)
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Saved in your list",
+                    text = place.location,
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
                 )
             }
-            IconButton(onClick = { /* Handle remove from favorites */ }) {
+            IconButton(onClick = onFavoriteClick) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "Remove from favorites",
@@ -152,13 +203,5 @@ fun FavoritePlaceCard(place: Destination, onClick: () -> Unit) {
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FavoritesScreenPreview() {
-    MyRoamNepalTheme {
-        FavoritesScreen(onBack = {})
     }
 }

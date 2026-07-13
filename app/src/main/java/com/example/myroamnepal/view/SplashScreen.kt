@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -23,7 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myroamnepal.R
@@ -68,7 +68,6 @@ fun SplashContent(onGetStartedClick: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -82,68 +81,65 @@ fun SplashContent(onGetStartedClick: () -> Unit) {
                 )
         )
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(40.dp)
         ) {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 300.dp)
-            ) {
+            item {
+                Spacer(modifier = Modifier.height(260.dp))
+                
                 Text(
                     text = "RoamNepal",
                     color = Color.White,
                     fontSize = 35.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = (-1).sp
+                    letterSpacing = (-1).sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-                    .padding(bottom = 300.dp)
-            ) {
-
-
-                Text(
-                    text = "Discover Nepal's Hidden Gems",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(30.dp))
-
-
-                Button(
-                    onClick = onGetStartedClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White.copy(alpha = 0.9f),
-                        contentColor = BluePrimary
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Get Started",
+                        text = "Discover Nepal's Hidden Gems",
+                        color = Color.White,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
                     )
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Button(
+                        onClick = onGetStartedClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White.copy(alpha = 0.9f),
+                            contentColor = BluePrimary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                    ) {
+                        Text(
+                            text = "Get Started",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
-                
-                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
