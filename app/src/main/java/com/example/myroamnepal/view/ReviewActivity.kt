@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myroamnepal.model.ReviewModel
+import com.example.myroamnepal.repo.NotificationRepoImpl
+import com.example.myroamnepal.repo.PlaceRepoImpl
 import com.example.myroamnepal.repo.ReviewRepoImpl
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
@@ -42,8 +44,13 @@ class ReviewActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyRoamNepalTheme {
+                val context = LocalContext.current
                 val reviewViewModel: ReviewViewModel = viewModel(
-                    factory = ReviewViewModelFactory(ReviewRepoImpl())
+                    factory = ReviewViewModelFactory(
+                        repo = ReviewRepoImpl(),
+                        placeRepo = PlaceRepoImpl(context),
+                        notificationRepo = NotificationRepoImpl()
+                    )
                 )
                 val userViewModel: UserViewModel = viewModel()
                 
@@ -96,11 +103,11 @@ fun ReviewScreen(
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
+                .padding(innerPadding)
                 .fillMaxSize(),
-            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 16.dp),
+            contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             item {
                 Surface(
                     color = BluePrimary,
@@ -108,8 +115,8 @@ fun ReviewScreen(
                 ) {
                     Row(
                         modifier = Modifier
-                            .statusBarsPadding()
                             .fillMaxWidth()
+                            .statusBarsPadding()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -130,7 +137,6 @@ fun ReviewScreen(
                     }
                 }
             }
-
 
             item {
                 Box(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -158,7 +164,6 @@ fun ReviewScreen(
                 }
             }
 
-
             item {
                 Text(
                     text = "Community Reviews",
@@ -168,7 +173,6 @@ fun ReviewScreen(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
-
 
             if (reviews.isEmpty() && !loading) {
                 item {

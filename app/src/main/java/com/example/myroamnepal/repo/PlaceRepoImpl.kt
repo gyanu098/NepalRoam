@@ -13,7 +13,6 @@ class PlaceRepoImpl(private val context: Context) : PlaceRepo {
     private val placeRef = database.getReference("places")
 
     override fun uploadImage(imageUri: Uri, callback: (Boolean, String?) -> Unit) {
-        // IMPORTANT: Replace "ml_default" with your ACTUAL Unsigned Upload Preset name from Cloudinary Settings
         val uploadPreset = "yxqloe0j"
 
         MediaManager.get().upload(imageUri)
@@ -90,5 +89,25 @@ class PlaceRepoImpl(private val context: Context) : PlaceRepo {
                 callback(false, null, error.message)
             }
         })
+    }
+
+    override fun updatePlace(place: PlaceModel, callback: (Boolean, String) -> Unit) {
+        placeRef.child(place.id).setValue(place).addOnCompleteListener {
+            if (it.isSuccessful) {
+                callback(true, "Place updated successfully")
+            } else {
+                callback(false, it.exception?.message ?: "Failed to update place")
+            }
+        }
+    }
+
+    override fun deletePlace(id: String, callback: (Boolean, String) -> Unit) {
+        placeRef.child(id).removeValue().addOnCompleteListener {
+            if (it.isSuccessful) {
+                callback(true, "Place deleted successfully")
+            } else {
+                callback(false, it.exception?.message ?: "Failed to delete place")
+            }
+        }
     }
 }

@@ -112,7 +112,7 @@ fun PlaceDetailScreen(
                     .background(MaterialTheme.colorScheme.background),
                 contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
             ) {
-                // Movable Header
+
                 item {
                     Surface(shadowElevation = 4.dp, color = BluePrimary) {
                         Box(

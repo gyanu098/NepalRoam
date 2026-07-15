@@ -97,6 +97,11 @@
             android:label="Favorites"
             android:theme="@style/Theme.MyRoamNepal"></activity>
         <activity
+            android:name=".view.AdminDashboardActivity"
+            android:exported="true"
+            android:label="Admin Dashboard"
+            android:theme="@style/Theme.MyRoamNepal"></activity>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"

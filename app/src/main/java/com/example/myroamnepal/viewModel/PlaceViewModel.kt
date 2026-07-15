@@ -88,4 +88,26 @@ class PlaceViewModel(private val repo: PlaceRepo) : ViewModel() {
             }
         }
     }
+
+    fun updatePlace(place: PlaceModel) {
+        _loading.value = true
+        repo.updatePlace(place) { success, msg ->
+            _loading.value = false
+            _message.value = msg
+            if (success) {
+                getAllPlaces() // Refresh list
+            }
+        }
+    }
+
+    fun deletePlace(id: String) {
+        _loading.value = true
+        repo.deletePlace(id) { success, msg ->
+            _loading.value = false
+            _message.value = msg
+            if (success) {
+                getAllPlaces() // Refresh list
+            }
+        }
+    }
 }

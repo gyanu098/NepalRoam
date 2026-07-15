@@ -9,4 +9,6 @@ interface PlaceRepo {
     fun getAllPlaces(callback: (Boolean, List<PlaceModel>, String) -> Unit)
     fun getPlacesByUser(userId: String, callback: (Boolean, List<PlaceModel>, String) -> Unit)
     fun getPlaceById(id: String, callback: (Boolean, PlaceModel?, String) -> Unit)
+    fun updatePlace(place: PlaceModel, callback: (Boolean, String) -> Unit)
+    fun deletePlace(id: String, callback: (Boolean, String) -> Unit)
 }
