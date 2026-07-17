@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -67,7 +68,6 @@ fun AdminDashboardScreen(
     onBack: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0 for Users, 1 for Posts
-    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         userViewModel.getAllUsers()
@@ -100,10 +100,12 @@ fun AdminDashboardScreen(
                         containerColor = BluePrimary,
                         contentColor = Color.White,
                         indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                color = Color.White
-                            )
+                            if (selectedTab < tabPositions.size) {
+                                TabRowDefaults.SecondaryIndicator(
+                                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                    color = Color.White
+                                )
+                            }
                         }
                     ) {
                         Tab(
@@ -252,7 +254,6 @@ fun UserAdminCard(user: UserModel, onDelete: () -> Unit, onUpdate: (UserModel) -
 fun PostManagementSection(viewModel: PlaceViewModel) {
     val places by viewModel.places.collectAsState()
     val loading by viewModel.loading.collectAsState()
-    val context = LocalContext.current
 
     if (loading && places.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -290,15 +291,21 @@ fun PostAdminCard(place: PlaceModel, onDelete: () -> Unit, onUpdate: (PlaceModel
             title = { Text("Delete Post") },
             text = { Text("Are you sure you want to delete '${place.name}'?") },
             confirmButton = {
-                TextButton(onClick = {
-                    onDelete()
-                    showDeleteDialog = false
-                }) {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteDialog = false
+                    },
+                    modifier = Modifier.testTag("confirm_delete_button")
+                ) {
                     Text("Delete", color = Color.Red)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    modifier = Modifier.testTag("cancel_delete_button")
+                ) {
                     Text("Cancel")
                 }
             }
@@ -360,10 +367,16 @@ fun PostAdminCard(place: PlaceModel, onDelete: () -> Unit, onUpdate: (PlaceModel
                 Text(text = place.location, color = BluePrimary, fontSize = 12.sp)
             }
             Row {
-                IconButton(onClick = { showEditDialog = true }) {
+                IconButton(
+                    onClick = { showEditDialog = true },
+                    modifier = Modifier.testTag("edit_button_${place.id}")
+                ) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit", tint = BluePrimary)
                 }
-                IconButton(onClick = { showDeleteDialog = true }) {
+                IconButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.testTag("delete_button_${place.id}")
+                ) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
                 }
             }

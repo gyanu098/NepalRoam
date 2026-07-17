@@ -22,17 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myroamnepal.model.UserModel
 import com.example.myroamnepal.view.ui.theme.BluePrimary
 import com.example.myroamnepal.view.ui.theme.MyRoamNepalTheme
 import com.example.myroamnepal.viewModel.UserViewModel
-
-
-
 
 class LoginActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels()
@@ -44,8 +43,12 @@ class LoginActivity : ComponentActivity() {
             MyRoamNepalTheme {
                 LoginScreen(
                     viewModel = userViewModel,
-                    onLoginSuccess = {
-                        startActivity(Intent(this, DashboardActivity::class.java))
+                    onLoginSuccess = { user ->
+                        if (user.role == "admin") {
+                            startActivity(Intent(this, AdminDashboardActivity::class.java))
+                        } else {
+                            startActivity(Intent(this, DashboardActivity::class.java))
+                        }
                         finish()
                     },
                     onSignUpClick = {
@@ -60,7 +63,7 @@ class LoginActivity : ComponentActivity() {
 @Composable
 fun LoginScreen(
     viewModel: UserViewModel,
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (UserModel) -> Unit,
     onSignUpClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -79,8 +82,8 @@ fun LoginScreen(
     }
 
     LaunchedEffect(user) {
-        if (user != null) {
-            onLoginSuccess()
+        user?.let {
+            onLoginSuccess(it)
         }
     }
 
@@ -134,7 +137,9 @@ fun LoginScreen(
                         onValueChange = { email = it },
                         label = { Text("Email Address") },
                         leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = BluePrimary) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("email_field"),
                         shape = RoundedCornerShape(12.dp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         enabled = !loading,
@@ -154,7 +159,9 @@ fun LoginScreen(
                         onValueChange = { password = it },
                         label = { Text("Password") },
                         leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BluePrimary) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("password_field"),
                         shape = RoundedCornerShape(12.dp),
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -179,6 +186,7 @@ fun LoginScreen(
                                     Toast.makeText(context, "Please enter your email first", Toast.LENGTH_SHORT).show()
                                 }
                             },
+                            modifier = Modifier.testTag("forgot_password_button"),
                             enabled = !loading
                         ) {
                             Text("Forgot Password?", color = BluePrimary)
@@ -191,7 +199,8 @@ fun LoginScreen(
                         onClick = { viewModel.login(email, password) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(56.dp)
+                            .testTag("login_button"),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
                         enabled = !loading
@@ -210,6 +219,7 @@ fun LoginScreen(
                         TextButton(
                             onClick = onSignUpClick,
                             contentPadding = PaddingValues(0.dp),
+                            modifier = Modifier.testTag("signup_button"),
                             enabled = !loading
                         ) {
                             Text("Sign Up", color = BluePrimary, fontWeight = FontWeight.Bold)

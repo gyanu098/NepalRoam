@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -128,7 +129,8 @@ fun AddPlaceScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .height(56.dp),
+                        .height(56.dp)
+                        .testTag("post_gem_button"),
                     enabled = !loading,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = BluePrimary)
@@ -159,7 +161,7 @@ fun AddPlaceScreen(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = onBack) {
+                        IconButton(onClick = onBack, modifier = Modifier.testTag("back_button")) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
@@ -229,7 +231,8 @@ fun AddPlaceScreen(
                         value = name,
                         onValueChange = { name = it },
                         label = "Place Name",
-                        placeholder = "e.g. Hidden Waterfall"
+                        placeholder = "e.g. Hidden Waterfall",
+                        testTag = "name_field"
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -240,7 +243,8 @@ fun AddPlaceScreen(
                         label = "Description / Tag",
                         placeholder = "Tell us about this place...",
                         singleLine = false,
-                        minLines = 3
+                        minLines = 3,
+                        testTag = "description_field"
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -249,7 +253,8 @@ fun AddPlaceScreen(
                         value = tips,
                         onValueChange = { tips = it },
                         label = "Travel Tips (Optional)",
-                        placeholder = "What should others know?"
+                        placeholder = "What should others know?",
+                        testTag = "tips_field"
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -258,7 +263,8 @@ fun AddPlaceScreen(
                         value = bestSeason,
                         onValueChange = { bestSeason = it },
                         label = "Best Season to Visit",
-                        placeholder = "e.g. Spring, October-November"
+                        placeholder = "e.g. Spring, October-November",
+                        testTag = "best_season_field"
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -268,7 +274,8 @@ fun AddPlaceScreen(
                         onValueChange = { location = it },
                         label = "Location (City, District)",
                         placeholder = "e.g. Pokhara, Kaski",
-                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = BluePrimary) }
+                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = BluePrimary) },
+                        testTag = "location_field"
                     )
                     
                     Spacer(modifier = Modifier.height(32.dp))
@@ -286,7 +293,8 @@ fun AddPlaceTextField(
     placeholder: String,
     singleLine: Boolean = true,
     minLines: Int = 1,
-    leadingIcon: @Composable (() -> Unit)? = null
+    leadingIcon: @Composable (() -> Unit)? = null,
+    testTag: String? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -294,7 +302,9 @@ fun AddPlaceTextField(
         label = { Text(label) },
         placeholder = { Text(placeholder) },
         leadingIcon = leadingIcon,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .let { if (testTag != null) it.testTag(testTag) else it },
         shape = RoundedCornerShape(12.dp),
         singleLine = singleLine,
         minLines = minLines,

@@ -52,7 +52,11 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.cloudinary.android)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

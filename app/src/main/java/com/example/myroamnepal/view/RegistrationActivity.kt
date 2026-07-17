@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -75,6 +76,7 @@ fun RegistrationScreen(
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var adminCode by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
@@ -197,16 +199,39 @@ fun RegistrationScreen(
                         enabled = !loading
                     )
 
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = adminCode,
+                        onValueChange = { adminCode = it },
+                        label = { Text("Secret Admin Code (Optional)") },
+                        placeholder = { Text("Enter code for Admin role") },
+                        leadingIcon = { Icon(Icons.Default.VpnKey, contentDescription = null, tint = BluePrimary) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BluePrimary,
+                            focusedLabelColor = BluePrimary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
                         onClick = {
+                            val role = if (adminCode == "ADMIN123") "admin" else "user"
                             viewModel.registerUser(
                                 fullName = fullName,
                                 email = email,
                                 phone = phone,
                                 password = password,
                                 confirmPassword = confirmPassword,
+                                role = role,
                                 onSuccess = { }
                             )
                         },

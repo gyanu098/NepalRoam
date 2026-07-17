@@ -83,6 +83,7 @@ class UserViewModel(private val repo: UserRepo = UserRepoImpl()) : ViewModel() {
         phone: String,
         password: String,
         confirmPassword: String,
+        role: String = "user",
         onSuccess: () -> Unit
     ) {
         if (fullName.isBlank() || email.isBlank() || phone.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
@@ -102,7 +103,7 @@ class UserViewModel(private val repo: UserRepo = UserRepoImpl()) : ViewModel() {
                     fullName = fullName,
                     email = email,
                     phone = phone,
-                    role = "user"
+                    role = role
                 )
 
                 repo.addUser(uid, user) { addSuccess, addMessage ->
