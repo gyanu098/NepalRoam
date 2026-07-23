@@ -8,7 +8,7 @@ import com.cloudinary.android.callback.UploadCallback
 
 class ImageRepoImpl : ImageRepo {
     override fun uploadImage(context: Context, imageUri: Uri, callback: (String?) -> Unit) {
-        // IMPORTANT: Replace "ml_default" with your ACTUAL Unsigned Upload Preset name from Cloudinary Settings
+
         val uploadPreset = "yxqloe0j"
         
         MediaManager.get().upload(imageUri)
